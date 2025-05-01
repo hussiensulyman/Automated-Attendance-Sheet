@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Face Recognition Attendance</title>
+    <link rel="stylesheet" type="text/css" href="/static/style.css">
+</head>
+<body>
+    <h1>Face Recognition Attendance System</h1>
+
+    <!-- Form to Upload Image from Device -->
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="image" required>
+        <input type="submit" value="Upload Image">
+    </form>
+
+    <!-- Elements for Video Capture and Snapshot -->
+    <video id="video" width="640" height="480" autoplay></video>
+    <button id="snap">Capture Photo</button>
+    <canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
+    <div id="result"></div>
+
+    <!-- Attendance Table -->
+    <table id="attendanceTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Time</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Attendance records will be inserted here -->
+        </tbody>
+    </table>
+
+    <!-- Button to Download CSV -->
+    <button onclick="downloadCSV()">Download CSV</button>
+
+<script>
+    // Access to the camera
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+            var video = document.getElementById('video');
+            video.srcObject = stream;
+            video.play();
+        });
+    }
+
+    // Elements for taking the snapshot
+    var canvas = document.getElementById('canvas');
+    var context = canvas.getContext('2d');
+    var video = document.getElementById('video');
+
+    // Trigger photo capture
+    document.getElementById("snap").addEventListener("click", function() {
+        context.drawImage(video, 0, 0, 640, 480);
+        canvas.toBlob(function(blob) {
+            var formData = new FormData();
+            formData.append('image', blob, 'webcam.jpg');
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            }).then(response => response.json()).then(data => {
+                addRowToTable(data.name);
+            });
+        }, 'image/jpeg');
+    });
+
+    // Handle the form submission for image uploads
+    document.querySelector('form').addEventListener('submit', function(e) {
+        e.preventDefault(); // Prevent default form submission
+
+        var formData = new FormData(this);
+        fetch('/upload', {
+                var table = document.getElementById("attendanceTable").getElementsByTagName('tbody')[0];    method: 'POST',
+
+            body: formData
+        }).then(response => response.json()).then(data => {
+            addRowToTable(data.name); // Update the table with the response
+        });
+    });
+
+    function addRowToTable(names) {
+    var table = document.getElementById("attendanceTable").getElementsByTagName('tbody')[0];
+
+    names.split(',').forEach(function(name) {
+        var newRow = table.insertRow(table.length);
+        var cell1 = newRow.insertCell(0);
+        var cell2 = newRow.insertCell(1);
+        var cell3 = newRow.insertCell(2);
+
+        cell1.innerHTML = name.trim();
+        cell2.innerHTML = new Date().toLocaleTimeString(); // Current time
+        cell3.innerHTML = new Date().toLocaleDateString(); // Current date
+    });
+}
+
+    // Function to download CSV
+    function downloadCSV() {
+        var csv = [];
+        var rows = document.querySelectorAll("table#attendanceTable tr");
+
+        for (var i = 0; i < rows.length; i++) {
+            var row = [], cols = rows[i].querySelectorAll("td, th");
+
+            for (var j = 0; j < cols.length; j++)
+                row.push(cols[j].innerText);
+
+            csv.push(row.join(","));
+        }
+
+        // Download CSV file
+        downloadCSVFile(csv.join("\n"), "attendance.csv");
+    }
+
+    function downloadCSVFile(csv, filename) {
+        var csvFile;
+        var downloadLink;
+
+        // CSV file
+        csvFile = new Blob([csv], {type: "text/csv"});
+
+        // Download link
+        downloadLink = document.createElement("a");
+
+        // File name
+        downloadLink.download = filename;
+
+        // Create a link to the file
+        downloadLink.href = window.URL.createObjectURL(csvFile);
+
+        // Hide download link
+        downloadLink.style.display = "none";
+
+        // Add the link to DOM
+        document.body.appendChild(downloadLink);
+
+        // Click download link
+        downloadLink.click();
+    }
+</script>
+
+</body>
+</html>

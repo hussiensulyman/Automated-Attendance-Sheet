@@ -1,0 +1,24 @@
+# IDE and cache
+.idea/
+__pycache__/
+*.pyc
+
+# Sensitive data
+Attendance.csv
+class_names.py
+vision/
+Uploads/
+Image_Attendance/
+face_encodings
+face_encodings.pickle
+encodings
+encodings.pkl
+output_image.jpg
+
+# Virtual environment
+venv/
+
+# Config and local files
+.env
+config.py
+clean_venv/
